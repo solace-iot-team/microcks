@@ -474,15 +474,15 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
          }
 
          String parameterName = parameterEntry.getKey();
-         log.debug("param {}", parameterName);
+         log.debug("extracting examples for parameter {}", parameterName);
          if (parameter.has("schema") && parameter.path("schema").has("examples")) {
             Iterator<String> exampleNames = parameter.path("schema").path("examples").fieldNames();
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
-               log.debug("processing example {}", exampleName);
+               log.trace("processing example {}", exampleName);
                JsonNode example = parameter.path("schema").path("examples").path(exampleName);
                String exampleValue = getExampleValue(example);
-               log.info("{} {} {}", parameterName, exampleName, exampleValue);
+               log.trace("{} {} {}", parameterName, exampleName, exampleValue);
                Map<String, String> exampleParams = results.get(exampleName);
                if (exampleParams == null) {
                   exampleParams = new HashMap<>();
@@ -499,7 +499,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
     * Get the value of an example. This can be direct value field or those of followed $ref
     */
    private String getExampleValue(JsonNode example) {
-      log.debug("have a value {}", example.toPrettyString());
+      log.trace("have a value {}", example.toPrettyString());
       if (example.has("value")) {
          if (example.path("value").getNodeType() == JsonNodeType.ARRAY || example.path("value").getNodeType() == JsonNodeType.OBJECT) {
             return example.path("value").toString();
