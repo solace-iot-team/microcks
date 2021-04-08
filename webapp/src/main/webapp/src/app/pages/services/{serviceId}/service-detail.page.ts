@@ -56,16 +56,16 @@ export class ServiceDetailPageComponent implements OnInit {
   operationsListConfig: ListConfig;
   notifications: Notification[];
 
-  constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, 
-      private testsSvc: TestsService, protected authService: IAuthenticationService, private config: ConfigService,
-      private modalService: BsModalService, private notificationService: NotificationService,
-      private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
+  constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService,
+    private testsSvc: TestsService, protected authService: IAuthenticationService, private config: ConfigService,
+    private modalService: BsModalService, private notificationService: NotificationService,
+    private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
   }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
     this.serviceView = this.route.paramMap.pipe(
-      switchMap((params: ParamMap) => 
+      switchMap((params: ParamMap) =>
         this.servicesSvc.getServiceView(params.get('serviceId')))
     );
     this.contracts = this.route.paramMap.pipe(
@@ -76,7 +76,7 @@ export class ServiceDetailPageComponent implements OnInit {
       switchMap((params: ParamMap) =>
         this.testsSvc.listByServiceId(params.get('serviceId')))
     );
-    this.serviceView.subscribe( view => {
+    this.serviceView.subscribe(view => {
       this.serviceId = view.service.id;
       this.resolvedServiceView = view;
       this.operations = view.service.operations;
@@ -126,7 +126,7 @@ export class ServiceDetailPageComponent implements OnInit {
     if (this.resolvedServiceView.service.metadata.labels != undefined) {
       initialState.labels = JSON.parse(JSON.stringify(this.resolvedServiceView.service.metadata.labels));
     }
-    this.modalRef = this.modalService.show(EditLabelsDialogComponent, {initialState});
+    this.modalRef = this.modalService.show(EditLabelsDialogComponent, { initialState });
     this.modalRef.content.saveLabelsAction.subscribe((labels) => {
       this.resolvedServiceView.service.metadata.labels = labels;
       this.servicesSvc.updateServiceMetadata(this.resolvedServiceView.service, this.resolvedServiceView.service.metadata).subscribe(
@@ -155,7 +155,7 @@ export class ServiceDetailPageComponent implements OnInit {
       closeBtnName: 'Close',
       service: this.resolvedServiceView.service
     };
-    this.modalRef = this.modalService.show(GenericResourcesDialogComponent, {initialState});
+    this.modalRef = this.modalService.show(GenericResourcesDialogComponent, { initialState });
   }
 
   public getHeaderName(exchange: Exchange): string {
@@ -172,11 +172,11 @@ export class ServiceDetailPageComponent implements OnInit {
       result += " is <code>required</code>";
     }
     if (constraint.recopy) {
-      if (result != "Parameter ") { result += ", "}
+      if (result != "Parameter ") { result += ", " }
       result += " will be <code>recopied</code> as response header"
     }
     if (constraint.mustMatchRegexp) {
-      if (result != "Parameter ") { result += ", "}
+      if (result != "Parameter ") { result += ", " }
       result += " must match the <code>" + constraint.mustMatchRegexp + "</code> regular expression"
     }
     return result;
@@ -187,7 +187,7 @@ export class ServiceDetailPageComponent implements OnInit {
     if (operation.bindings != null) {
       var result = "";
       var bindings = Object.keys(operation.bindings);
-      for (let i=0; i<bindings.length; i++) {
+      for (let i = 0; i < bindings.length; i++) {
         var b = bindings[i];
         switch (b) {
           case 'KAFKA':
@@ -200,7 +200,7 @@ export class ServiceDetailPageComponent implements OnInit {
             result += 'AMQP 1.0';
             break;
         }
-        if (i+1 < bindings.length) {
+        if (i + 1 < bindings.length) {
           result += ", ";
         }
       }
@@ -236,24 +236,24 @@ export class ServiceDetailPageComponent implements OnInit {
       var parts = {};
       var params = {};
       var operationName = operation.name;
-      
+
       if (dispatchCriteria != null) {
         var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
         var paramsCriteria = (dispatchCriteria.indexOf('?') == -1 ? null : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1));
 
         partsCriteria = this.encodeUrl(partsCriteria);
-        partsCriteria.split('/').forEach(function(element, index, array) {
-          if (element){
+        partsCriteria.split('/').forEach(function (element, index, array) {
+          if (element) {
             parts[element.split('=')[0]] = element.split('=')[1];
           }
         });
-      
+
         //operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
-        operationName = operationName.replace(/{([a-zA-Z0-9-_]+)}/g, function(match, p1, string) {
+        operationName = operationName.replace(/{([a-zA-Z0-9-_]+)}/g, function (match, p1, string) {
           return parts[p1];
         });
         // Support also Postman syntax with /:part
-        operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, function(match, p1, string) {
+        operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, function (match, p1, string) {
           return parts[p1];
         });
         if (paramsCriteria != null) {
@@ -272,7 +272,7 @@ export class ServiceDetailPageComponent implements OnInit {
       var resourceName = this.removeVerbInUrl(operation.name);
       result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version + resourceName;
     }
-    
+
     return result;
   }
   public formatAsyncDestination(operation: Operation, eventMessage: EventMessage, binding: string): string {
@@ -304,8 +304,16 @@ export class ServiceDetailPageComponent implements OnInit {
     if ('KAFKA' === binding) {
       operationName = operationName.replace(/\//g, '-');
     }
+    const style = this.config.getFeatureProperty('async-api', 'namespace-style');
+    if (style === 'bare') {
+      return operationName;
+    } else if (style === 'prefixed') {
+      return serviceName + '-' + this.resolvedServiceView.service.version + '-' + operationName;
+    } else {
+      // default - generate prefixed
+      return serviceName + '-' + this.resolvedServiceView.service.version + '-' + operationName;
+    }
 
-    return serviceName + "-" + this.resolvedServiceView.service.version + "-" + operationName;
   }
 
 
@@ -327,12 +335,12 @@ export class ServiceDetailPageComponent implements OnInit {
 
   private removeVerbInUrl(operationName: string): string {
     if (operationName.startsWith("GET ") || operationName.startsWith("PUT ")
-        || operationName.startsWith("POST ") || operationName.startsWith("DELETE ")
-        || operationName.startsWith("OPTIONS ") || operationName.startsWith("PATCH ")
-        || operationName.startsWith("HEAD ") || operationName.startsWith("TRACE ")
-        || operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
+      || operationName.startsWith("POST ") || operationName.startsWith("DELETE ")
+      || operationName.startsWith("OPTIONS ") || operationName.startsWith("PATCH ")
+      || operationName.startsWith("HEAD ") || operationName.startsWith("TRACE ")
+      || operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
       operationName = operationName.slice(operationName.indexOf(' ') + 1);
-    } 
+    }
     return operationName;
   }
   private encodeUrl(url: string): string {
@@ -348,8 +356,8 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public allowOperationsPropertiesEdit(): boolean {
-    return (this.hasRole('admin') || this.hasRole('manager')) 
-        && (this.resolvedServiceView.service.type === 'REST' || (this.resolvedServiceView.service.type === 'EVENT' && this.asyncAPIFeatureEnabled()));
+    return (this.hasRole('admin') || this.hasRole('manager'))
+      && (this.resolvedServiceView.service.type === 'REST' || (this.resolvedServiceView.service.type === 'EVENT' && this.asyncAPIFeatureEnabled()));
   }
 
   public asyncAPIFeatureEnabled(): boolean {
